@@ -1,19 +1,30 @@
-// routes/mascota.routes.js
-import express from 'express';
+"use strict";
+
+import express from "express";
 import {
     crearMascota,
-    obtenerMascotas,
     obtenerMascotaPorId,
+    obtenerMascotas,
     actualizarMascota,
-    eliminarMascota
-} from '../controllers/mascota.controller.js';
+    eliminarMascota,
+    obtenerImagenMascota
+} from "../controllers/mascota.controller.js";
+import upload from "../middlewares/multer.js";
+import { isAdmin } from "../middlewares/authorization.middleware.js";
 
 const router = express.Router();
 
-router.post('/mascotas', crearMascota); // Crear una nueva mascota
-router.get('/mascotas', obtenerMascotas); // Obtener todas las mascotas
-router.get('/mascotas/:id', obtenerMascotaPorId); // Obtener una mascota por ID
-router.put('/mascotas/:id', actualizarMascota); // Actualizar una mascota por ID
-router.delete('/mascotas/:id', eliminarMascota); // Eliminar una mascota por ID
+// Rutas accesibles solo por administradores
+router.post("/crear", upload.single("imagen"), isAdmin, crearMascota);
+router.put("/actualizar/:id", isAdmin, upload.single("imagen"), actualizarMascota);
+router.delete("/eliminar/:id", isAdmin, eliminarMascota);
+
+// Rutas accesibles por todos los usuarios autenticados
+router.get("/obtener/:id", obtenerMascotaPorId);
+router.get("/todos", obtenerMascotas);
+
+// Petición GET para obtener la imagen de una mascota por ID
+router.get("/imagen/:id", obtenerImagenMascota);
+
 
 export default router;

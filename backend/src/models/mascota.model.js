@@ -17,7 +17,6 @@ const mascotaSchema = new mongoose.Schema(
     pulgas: { type: Boolean, required: true },
     heridas: { type: Boolean, required: true },
     personalidad: { type: String, required: true },
-    fecha_sesiones: { type: Date, required: true },
     recordatorio: { type: String, required: true },
     nota: { type: Number, required: true },
     nodos: { type: Number, required: true },
@@ -25,5 +24,6 @@ const mascotaSchema = new mongoose.Schema(
     imagenPrevia: { type: String, required: false },
     },
 );
+
 
 export default mongoose.model("Mascota", mascotaSchema);
