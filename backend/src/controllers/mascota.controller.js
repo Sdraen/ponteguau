@@ -3,10 +3,6 @@
 import Mascota from "../models/mascota.model.js";
 import { mascotaSchema } from "../schemas/mascota.schema.js";
 
-/**
- * Controlador para gestionar las mascotas.
- */
-
 // Crear una nueva mascota
 export const crearMascota = async (req, res) => {
   try {
