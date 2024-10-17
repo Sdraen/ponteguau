@@ -11,13 +11,16 @@ import authRoutes from "./auth.routes.js";
 /** Middleware de autenticación */
 import authenticationMiddleware from "../middlewares/authentication.middleware.js";
 
+/** Enrutador de mascotas */
+import mascotaRoutes from "./mascota.routes.js";
+
 /** Instancia del enrutador */
 const router = Router();
 // Define las rutas para los usuarios /api/usuarios
 router.use("/users", authenticationMiddleware, userRoutes);
 // Define las rutas para la autenticación /api/auth
 router.use("/auth", authRoutes);
-// Define las rutas para la alimentación /alimentacion
-
+// Define las rutas para las mascotas
+router.use("/mascota", mascotaRoutes);
 // Exporta el enrutador
 export default router;

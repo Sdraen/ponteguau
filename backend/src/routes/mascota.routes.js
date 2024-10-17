@@ -2,28 +2,25 @@
 
 import express from "express";
 import {
-    crearMascota,
-    obtenerMascotaPorId,
-    obtenerMascotas,
-    actualizarMascota,
-    eliminarMascota,
-    obtenerImagenMascota
+    getMascotas,
+    createMascota,
+    getMascotaById,
+    updateMascota,
+    deleteMascota,
+    obtenerImagenMascota,
 } from "../controllers/mascota.controller.js";
 import upload from "../middlewares/multer.js";
-import { isAdmin } from "../middlewares/authorization.middleware.js";
+import authenticationMiddleware from "../middlewares/authentication.middleware.js";
 
 const router = express.Router();
+router.use(authenticationMiddleware);
 
-// Rutas accesibles solo por administradores
-router.post("/crear", upload.single("imagen"), isAdmin, crearMascota);
-router.put("/actualizar/:id", isAdmin, upload.single("imagen"), actualizarMascota);
-router.delete("/eliminar/:id", isAdmin, eliminarMascota);
-
-// Rutas accesibles por todos los usuarios autenticados
-router.get("/obtener/:id", obtenerMascotaPorId);
-router.get("/todos", obtenerMascotas);
-
-// Petición GET para obtener la imagen de una mascota por ID
+// Rutas de mascotas
+router.post("/crear", upload.single("imagen"), createMascota);
+router.put("/actualizar/:id", upload.single("imagen"), updateMascota);
+router.delete("/eliminar/:id",  deleteMascota);
+router.get("/obtener/:id", getMascotaById);
+router.get("/todos", getMascotas);
 router.get("/imagen/:id", obtenerImagenMascota);
 
 
