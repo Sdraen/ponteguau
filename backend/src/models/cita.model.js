@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const citaSchema = new mongoose.Schema({
+const CitaSchema = new mongoose.Schema({
   fecha: { type: Date, required: true }, // Fecha y hora de la cita
   mascota: { type: mongoose.Schema.Types.ObjectId, ref: 'Mascota', required: true }, // Referencia a la mascota
   propietario: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Referencia al propietario de la mascota
@@ -23,4 +23,4 @@ citaSchema.pre("findOneAndUpdate", function(next) {
   next();
 });
 
-export default mongoose.model("Cita", citaSchema);
+export default mongoose.model("Cita", CitaSchema);
