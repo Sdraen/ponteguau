@@ -39,13 +39,13 @@ async function createUser(req, res) {
 
     if (userError) return respondError(req, res, 400, userError);
     if (!newUser) {
-      return respondError(req, res, 400, "No se creo el usuario");
+      return respondError(req, res, 400, "No se creó el usuario");
     }
 
     respondSuccess(req, res, 201, newUser);
   } catch (error) {
     handleError(error, "user.controller -> createUser");
-    respondError(req, res, 500, "No se creo el usuario");
+    respondError(req, res, 500, "No se creó el usuario");
   }
 }
 
@@ -113,7 +113,7 @@ async function deleteUser(req, res) {
           req,
           res,
           404,
-          "No se encontro el usuario solicitado",
+          "No se encontró el usuario solicitado",
           "Verifique el id ingresado",
         )
       : respondSuccess(req, res, 200, user);
