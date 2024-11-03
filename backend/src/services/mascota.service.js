@@ -2,6 +2,8 @@
 
 import Mascota from "../models/mascota.model.js";
 import { handleError } from "../utils/errorHandler.js";
+import fs from "fs";
+import path from "path";
 
 /**
  * Crea una nueva mascota
@@ -50,15 +52,26 @@ export async function obtenerMascotaPorId(id) {
 }
 
 /**
- * Actualiza una mascota por su ID
+ * Actualiza una mascota por su ID, incluyendo gestión de imágenes
  * @param {String} id - ID de la mascota
  * @param {Object} mascotaData - Datos actualizados de la mascota
  * @returns {Promise} Promesa con el objeto de la mascota actualizada
  */
 export async function actualizarMascota(id, mascotaData) {
   try {
+    const mascotaActual = await Mascota.findById(id);
+
+    if (!mascotaActual) return [null, "Mascota no encontrada"];
+
+    // Elimina la imagen anterior si hay una nueva proporcionada
+    if (mascotaData.imagenAntes && mascotaActual.imagenAntes) {
+      fs.unlinkSync(path.resolve(mascotaActual.imagenAntes));
+    }
+    if (mascotaData.imagenDespues && mascotaActual.imagenDespues) {
+      fs.unlinkSync(path.resolve(mascotaActual.imagenDespues));
+    }
+
     const mascotaActualizada = await Mascota.findByIdAndUpdate(id, mascotaData, { new: true });
-    if (!mascotaActualizada) return [null, "Mascota no encontrada"];
     return [mascotaActualizada, null];
   } catch (error) {
     handleError(error, "mascota.service -> actualizarMascota");
@@ -67,14 +80,20 @@ export async function actualizarMascota(id, mascotaData) {
 }
 
 /**
- * Elimina una mascota por su ID
+ * Elimina una mascota por su ID y sus imágenes asociadas
  * @param {String} id - ID de la mascota
  * @returns {Promise} Promesa con el objeto de la mascota eliminada
  */
 export async function eliminarMascota(id) {
   try {
     const mascotaEliminada = await Mascota.findByIdAndDelete(id);
+
     if (!mascotaEliminada) return [null, "Mascota no encontrada"];
+
+    // Elimina las imágenes asociadas
+    if (mascotaEliminada.imagenAntes) fs.unlinkSync(path.resolve(mascotaEliminada.imagenAntes));
+    if (mascotaEliminada.imagenDespues) fs.unlinkSync(path.resolve(mascotaEliminada.imagenDespues));
+
     return [mascotaEliminada, null];
   } catch (error) {
     handleError(error, "mascota.service -> eliminarMascota");

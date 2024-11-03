@@ -33,11 +33,6 @@ const mascotaSchema = Joi.object({
     "any.required": "El peso es obligatorio.",
     "number.base": "El peso debe ser un número."
   }),
-  color: Joi.string().required().messages({
-    "string.empty": "El color no puede estar vacío.",
-    "any.required": "El color es obligatorio.",
-    "string.base": "El color debe ser de tipo string."
-  }),
   chip: Joi.boolean().required().default(false).messages({
     "any.required": "El chip es obligatorio.",
     "boolean.base": "El valor del chip debe ser booleano."
@@ -81,12 +76,21 @@ const mascotaSchema = Joi.object({
     "any.required": "El campo nodos es obligatorio.",
     "number.base": "El campo nodos debe ser un número."
   }),
-  permitirFotos: Joi.boolean().required().messages({
-    "any.required": "El campo permitirFotos es obligatorio.",
-    "boolean.base": "El valor de permitirFotos debe ser booleano."
+  imagenAntes: Joi.string().optional().messages({
+    "string.base": "El campo imagenAntes debe ser de tipo string."
   }),
-  imagenPrevia: Joi.string().optional().messages({
-    "string.base": "El campo imagenPrevia debe ser de tipo string."
+  imagenDespues: Joi.string().optional().messages({
+    "string.base": "El campo imagenDespues debe ser de tipo string."
+  }),
+  propietario: Joi.string().required().messages({
+    "any.required": "El propietario es obligatorio.",
+    "string.base": "El propietario debe ser un ID de tipo string."
+  }),
+  historialCitas: Joi.array().items(Joi.string()).optional().messages({
+    "string.base": "Cada ID de cita en historialCitas debe ser de tipo string."
+  }),
+  notasAdicionales: Joi.array().items(Joi.string()).optional().messages({
+    "string.base": "Cada nota en notasAdicionales debe ser de tipo string."
   })
 }).messages({
   "object.unknown": "No se permiten propiedades adicionales."

@@ -8,28 +8,7 @@ import path from "path";
 import fs from "fs";
 
 /**
- * Obtiene todas las mascotas
- * @param {Object} req - Objeto de petición
- * @param {Object} res - Objeto de respuesta
- */
-async function getMascotas(req, res) {
-  try {
-    const [mascotas, errorMascotas] = await MascotaService.obtenerMascotas();
-    if (errorMascotas) return respondError(req, res, 500, errorMascotas);
-
-    mascotas.length === 0
-      ? respondSuccess(req, res, 204)
-      : respondSuccess(req, res, 200, mascotas);
-  } catch (error) {
-    handleError(error, "mascota.controller -> getMascotas");
-    respondError(req, res, 400, error.message);
-  }
-}
-
-/**
- * Crea una nueva mascota
- * @param {Object} req - Objeto de petición
- * @param {Object} res - Objeto de respuesta
+ * Crea una nueva mascota con imágenes opcionales antes y después de la peluquería.
  */
 async function createMascota(req, res) {
   try {
@@ -37,11 +16,13 @@ async function createMascota(req, res) {
     const { error: bodyError } = mascotaSchema.validate(body);
     if (bodyError) return respondError(req, res, 400, bodyError.message);
 
-    const imagen = req.file ? req.file.path : null;
+    const imagenAntes = req.files?.imagenAntes?.[0]?.path || null;
+    const imagenDespues = req.files?.imagenDespues?.[0]?.path || null;
 
     const [nuevaMascota, errorMascota] = await MascotaService.crearMascota({
       ...body,
-      imagenPrevia: imagen,
+      imagenAntes,
+      imagenDespues,
     });
 
     if (errorMascota) return respondError(req, res, 500, errorMascota);
@@ -57,31 +38,7 @@ async function createMascota(req, res) {
 }
 
 /**
- * Obtiene una mascota por su id
- * @param {Object} req - Objeto de petición
- * @param {Object} res - Objeto de respuesta
- */
-async function getMascotaById(req, res) {
-  try {
-    const { params } = req;
-    const { error: paramsError } = mascotaIdSchema.validate(params);
-    if (paramsError) return respondError(req, res, 400, paramsError.message);
-
-    const [mascota, errorMascota] = await MascotaService.obtenerMascotaPorId(params.id);
-
-    if (errorMascota) return respondError(req, res, 404, errorMascota);
-
-    respondSuccess(req, res, 200, mascota);
-  } catch (error) {
-    handleError(error, "mascota.controller -> getMascotaById");
-    respondError(req, res, 500, "No se pudo obtener la mascota");
-  }
-}
-
-/**
- * Actualiza una mascota por su id
- * @param {Object} req - Objeto de petición
- * @param {Object} res - Objeto de respuesta
+ * Actualiza una mascota por su ID, incluyendo las imágenes antes y después.
  */
 async function updateMascota(req, res) {
   try {
@@ -92,11 +49,16 @@ async function updateMascota(req, res) {
     const { error: bodyError } = mascotaSchema.validate(body);
     if (bodyError) return respondError(req, res, 400, bodyError.message);
 
-    const imagen = req.file ? req.file.path : null;
+    const imagenAntes = req.files?.imagenAntes?.[0]?.path || null;
+    const imagenDespues = req.files?.imagenDespues?.[0]?.path || null;
 
     const [mascota, errorMascota] = await MascotaService.actualizarMascota(
       params.id,
-      { ...body, ...(imagen && { imagenPrevia: imagen }) }
+      {
+        ...body,
+        ...(imagenAntes && { imagenAntes }),
+        ...(imagenDespues && { imagenDespues }),
+      }
     );
 
     if (errorMascota) return respondError(req, res, 400, errorMascota);
@@ -109,9 +71,7 @@ async function updateMascota(req, res) {
 }
 
 /**
- * Elimina una mascota por su id
- * @param {Object} req - Objeto de petición
- * @param {Object} res - Objeto de respuesta
+ * Elimina una mascota y sus imágenes por su ID.
  */
 async function deleteMascota(req, res) {
   try {
@@ -119,10 +79,12 @@ async function deleteMascota(req, res) {
     const { error: paramsError } = mascotaIdSchema.validate(params);
     if (paramsError) return respondError(req, res, 400, paramsError.message);
 
-    const [, errorMascota] = await MascotaService.eliminarMascota(params.id);
-    if (errorMascota) {
-      return respondError(req, res, 404, errorMascota);
-    }
+    const [mascota, errorMascota] = await MascotaService.eliminarMascota(params.id);
+    if (errorMascota) return respondError(req, res, 404, errorMascota);
+
+    // Elimina las imágenes asociadas
+    if (mascota.imagenAntes) fs.unlinkSync(path.resolve(mascota.imagenAntes));
+    if (mascota.imagenDespues) fs.unlinkSync(path.resolve(mascota.imagenDespues));
 
     respondSuccess(req, res, 200, { mensaje: "Mascota eliminada correctamente" });
   } catch (error) {
@@ -132,28 +94,31 @@ async function deleteMascota(req, res) {
 }
 
 /**
- * Obtiene la imagen de una mascota por su id
- * @param {Object} req - Objeto de petición
- * @param {Object} res - Objeto de respuesta
+ * Actualiza solo las imágenes de una mascota
  */
-async function obtenerImagenMascota(req, res) {
+async function updateMascotaImagenes(req, res) {
   try {
-    const { id } = req.params;
+    const { params } = req;
+    const { error: paramsError } = mascotaIdSchema.validate(params);
+    if (paramsError) return respondError(req, res, 400, paramsError.message);
 
-    const [mascota, errorMascota] = await MascotaService.obtenerMascotaPorId(id);
-    if (errorMascota || !mascota.imagenPrevia) {
-      return respondError(req, res, 404, "Imagen no encontrada");
-    }
+    const imagenAntes = req.files?.imagenAntes?.[0]?.path || null;
+    const imagenDespues = req.files?.imagenDespues?.[0]?.path || null;
 
-    const imagePath = path.resolve(mascota.imagenPrevia);
-    if (fs.existsSync(imagePath)) {
-      res.sendFile(imagePath);
-    } else {
-      respondError(req, res, 404, "Imagen no encontrada en el servidor");
-    }
+    const [mascota, errorMascota] = await MascotaService.actualizarMascota(
+      params.id,
+      {
+        ...(imagenAntes && { imagenAntes }),
+        ...(imagenDespues && { imagenDespues }),
+      }
+    );
+
+    if (errorMascota) return respondError(req, res, 400, errorMascota);
+
+    respondSuccess(req, res, 200, { mensaje: "Imágenes actualizadas correctamente", mascota });
   } catch (error) {
-    handleError(error, "mascota.controller -> obtenerImagenMascota");
-    respondError(req, res, 500, "No se pudo obtener la imagen de la mascota");
+    handleError(error, "mascota.controller -> updateMascotaImagenes");
+    respondError(req, res, 500, "No se pudieron actualizar las imágenes de la mascota");
   }
 }
 
@@ -164,4 +129,5 @@ export default {
   updateMascota,
   deleteMascota,
   obtenerImagenMascota,
+  updateMascotaImagenes, // Nuevo endpoint
 };
