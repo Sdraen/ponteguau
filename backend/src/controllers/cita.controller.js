@@ -1,64 +1,47 @@
 "use strict";
 
+import Cita from "../models/cita.model.js";
 import { respondSuccess, respondError } from "../utils/resHandler.js";
-import CitaService from "../services/cita.service.js";
 import { handleError } from "../utils/errorHandler.js";
-import Mascota from "../models/mascota.model.js";
-import resend from "../utils/resend.js";
-import moment from "moment";
 
 /**
- * Crea una nueva cita y envía un correo de confirmación.
- * @param {import('express').Request} req - La solicitud HTTP.
- * @param {import('express').Response} res - La respuesta HTTP.
+ * Obtiene todas las citas.
+ * @param {Object} req - Objeto de petición
+ * @param {Object} res - Objeto de respuesta
+ */
+export async function getCitas(req, res) {
+  try {
+    const citas = await Cita.find()
+      .populate("mascota", "nombre")
+      .populate("propietario", "nombre email")
+      .exec();
+    respondSuccess(req, res, 200, citas);
+  } catch (error) {
+    handleError(error, "cita.controller -> getCitas");
+    respondError(req, res, 500, "No se pudo obtener las citas");
+  }
+}
+
+/**
+ * Crea una nueva cita.
+ * @param {Object} req - Objeto de petición
+ * @param {Object} res - Objeto de respuesta
  */
 export async function createCita(req, res) {
   try {
-    const { fecha, servicio, mascotas, propietario, email } = req.body;
+    const { fecha, mascota, propietario, servicio, notas } = req.body;
 
-    // Validación de cita existente
-    const existingCita = await CitaService.existeCitaEnFecha(fecha, mascotas);
-    if (existingCita) {
-      return respondError(req, res, 400, "Ya existe una cita para esta mascota en la misma fecha y hora.");
-    }
+    // Crear nueva cita
+    const nuevaCita = new Cita({
+      fecha,
+      mascota,
+      propietario,
+      servicio,
+      notas,
+    });
 
-    // Validación de anticipación de 12 horas
-    const now = moment();
-    const citaFecha = moment(fecha);
-    const hoursDifference = citaFecha.diff(now, "hours");
-
-    if (hoursDifference < 12) {
-      return respondError(req, res, 400, "Las citas deben agendarse con un máximo de 12 horas de anticipación.");
-    }
-
-    // Crear la cita
-    const nuevaCita = await CitaService.crearCita(req.body);
-
-    // Obtener detalles de las mascotas
-    const mascotasDetalle = await Mascota.find({ _id: { $in: mascotas } });
-    const nombresMascotas = mascotasDetalle.map(mascota => mascota.nombre).join(", ");
-
-    // Contenido del correo de confirmación
-    const emailContent = {
-      from: "no-reply@ponteguau.com", // Verifica que el dominio esté autorizado en Resend
-      to: email,
-      subject: "Confirmación de cita en Ponteguau",
-      html: `
-        <strong>Su cita ha sido confirmada.</strong><br>
-        Fecha: ${moment(fecha).format("DD/MM/YYYY HH:mm")}<br>
-        Mascotas: ${nombresMascotas}<br>
-        Servicio: ${servicio}
-      `,
-    };
-
-    // Enviar correo de confirmación
-    const { data, error } = await resend.emails.send(emailContent);
-
-    if (error) {
-      return respondError(req, res, 500, "No se pudo enviar el correo de confirmación.");
-    }
-
-    respondSuccess(req, res, 201, nuevaCita);
+    const citaGuardada = await nuevaCita.save();
+    respondSuccess(req, res, 201, citaGuardada);
   } catch (error) {
     handleError(error, "cita.controller -> createCita");
     respondError(req, res, 500, "No se pudo crear la cita");
@@ -66,54 +49,75 @@ export async function createCita(req, res) {
 }
 
 /**
- * Actualiza una cita y envía un correo de notificación.
- * @param {import('express').Request} req - La solicitud HTTP.
- * @param {import('express').Response} res - La respuesta HTTP.
+ * Obtiene una cita por su ID.
+ * @param {Object} req - Objeto de petición
+ * @param {Object} res - Objeto de respuesta
+ */
+export async function getCitaById(req, res) {
+  try {
+    const { id } = req.params;
+    const cita = await Cita.findById(id)
+      .populate("mascota", "nombre")
+      .populate("propietario", "nombre email")
+      .exec();
+
+    if (!cita) {
+      return respondError(req, res, 404, "No se encontró la cita solicitada");
+    }
+
+    respondSuccess(req, res, 200, cita);
+  } catch (error) {
+    handleError(error, "cita.controller -> getCitaById");
+    respondError(req, res, 500, "No se pudo obtener la cita");
+  }
+}
+
+/**
+ * Actualiza una cita por su ID.
+ * @param {Object} req - Objeto de petición
+ * @param {Object} res - Objeto de respuesta
  */
 export async function updateCita(req, res) {
   try {
     const { id } = req.params;
-    const { fecha, mascotas, email } = req.body;
+    const { fecha, servicio, notas, estado, imagenAntes, imagenDespues } = req.body;
 
-    // Validación de cita existente
-    const existingCita = await CitaService.existeCitaEnFecha(fecha, mascotas);
-    if (existingCita && existingCita._id.toString() !== id) {
-      return respondError(req, res, 400, "Ya existe una cita para esta mascota en la misma fecha y hora.");
-    }
+    const citaActualizada = await Cita.findByIdAndUpdate(
+      id,
+      { fecha, servicio, notas, estado, imagenAntes, imagenDespues },
+      { new: true }
+    );
 
-    const updatedCita = await CitaService.actualizarCita(id, req.body);
-
-    if (!updatedCita) {
+    if (!citaActualizada) {
       return respondError(req, res, 404, "No se encontró la cita solicitada");
     }
 
-    // Obtener detalles de las mascotas
-    const mascotasDetalle = await Mascota.find({ _id: { $in: mascotas } });
-    const nombresMascotas = mascotasDetalle.map(mascota => mascota.nombre).join(", ");
-
-    // Contenido del correo de actualización
-    const emailContent = {
-      from: "no-reply@ponteguau.com", // Verifica que el dominio esté autorizado en Resend
-      to: email,
-      subject: "Actualización de cita en Ponteguau",
-      html: `
-        <strong>Su cita ha sido actualizada.</strong><br>
-        Nueva Fecha: ${moment(fecha).format("DD/MM/YYYY HH:mm")}<br>
-        Mascotas: ${nombresMascotas}<br>
-      `,
-    };
-
-    // Enviar correo de actualización
-    const { data, error } = await resend.emails.send(emailContent);
-
-    if (error) {
-      return respondError(req, res, 500, "No se pudo enviar el correo de actualización.");
-    }
-
-    respondSuccess(req, res, 200, updatedCita);
+    respondSuccess(req, res, 200, citaActualizada);
   } catch (error) {
     handleError(error, "cita.controller -> updateCita");
     respondError(req, res, 500, "No se pudo actualizar la cita");
+  }
+}
+
+/**
+ * Elimina una cita por su ID.
+ * @param {Object} req - Objeto de petición
+ * @param {Object} res - Objeto de respuesta
+ */
+export async function deleteCita(req, res) {
+  try {
+    const { id } = req.params;
+
+    const citaEliminada = await Cita.findByIdAndDelete(id);
+
+    if (!citaEliminada) {
+      return respondError(req, res, 404, "No se encontró la cita solicitada");
+    }
+
+    respondSuccess(req, res, 200, { mensaje: "Cita eliminada correctamente" });
+  } catch (error) {
+    handleError(error, "cita.controller -> deleteCita");
+    respondError(req, res, 500, "No se pudo eliminar la cita");
   }
 }
 

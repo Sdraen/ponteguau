@@ -14,6 +14,9 @@ import authenticationMiddleware from "../middlewares/authentication.middleware.j
 /** Enrutador de mascotas */
 import mascotaRoutes from "./mascota.routes.js";
 
+/** Enrutador de citas */
+import citaRoutes from "./cita.routes.js";
+
 /** Instancia del enrutador */
 const router = Router();
 // Define las rutas para los usuarios /api/usuarios
@@ -22,5 +25,6 @@ router.use("/users", authenticationMiddleware, userRoutes);
 router.use("/auth", authRoutes);
 // Define las rutas para las mascotas
 router.use("/mascota", mascotaRoutes);
+router.use("/cita", citaRoutes);
 // Exporta el enrutador
 export default router;
