@@ -1,5 +1,5 @@
 
-# Ponteguau - Sistema de apoyo a la gestión de citas para Peluquería Canina
+# Sistema de apoyo a la gestión de Citas y de Caninos en Peluquería Canina Ponteguau
 
 Este proyecto es un sistema de gestión de citas para una peluquería canina llamado **Ponteguau**, que permite a los clientes agendar servicios de peluquería para sus mascotas. Incluye funcionalidades de autenticación, gestión de citas y administración de mascotas. El proyecto está desarrollado utilizando el stack MERN (MongoDB, Express, React, Node.js).
 
