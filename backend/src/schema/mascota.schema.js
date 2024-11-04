@@ -91,9 +91,17 @@ const mascotaSchema = Joi.object({
   }),
   notasAdicionales: Joi.array().items(Joi.string()).optional().messages({
     "string.base": "Cada nota en notasAdicionales debe ser de tipo string."
-  })
+  }),
 }).messages({
   "object.unknown": "No se permiten propiedades adicionales."
 });
 
-export { mascotaSchema };
+// Esquema de validación para el ID de mascota
+const mascotaIdSchema = Joi.object({
+  id: Joi.string().required().messages({
+    "any.required": "El ID de la mascota es obligatorio.",
+    "string.base": "El ID debe ser un string."
+  })
+});
+
+export { mascotaSchema, mascotaIdSchema };

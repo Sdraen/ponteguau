@@ -24,7 +24,7 @@ router.use("/users", authenticationMiddleware, userRoutes);
 // Define las rutas para la autenticación /api/auth
 router.use("/auth", authRoutes);
 // Define las rutas para las mascotas
-router.use("/mascota", mascotaRoutes);
+router.use("/", mascotaRoutes);
 router.use("/cita", citaRoutes);
 // Exporta el enrutador
 export default router;

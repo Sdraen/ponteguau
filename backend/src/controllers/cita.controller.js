@@ -1,6 +1,6 @@
 "use strict";
 
-import Cita from "../models/cita.model.js";
+import Cita from "../models/Cita.model.js";
 import { respondSuccess, respondError } from "../utils/resHandler.js";
 import { handleError } from "../utils/errorHandler.js";
 

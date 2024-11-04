@@ -19,8 +19,8 @@ const mascotaSchema = new mongoose.Schema({
   nodos: { type: Number, required: true },
   imagenAntes: { type: String, required: false }, // Imagen antes de la peluquería
   imagenDespues: { type: String, required: false }, // Imagen después de la peluquería
-  propietario: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  historialCitas: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Cita' }],
+  propietario: { type: mongoose.Schema.Types.ObjectId, required: false , ref: 'User'},
+  historialCitas: [{ type: mongoose.Schema.Types.ObjectId,required:false, ref: 'Cita' }],
   notasAdicionales: [{ type: String }]
 });
 

@@ -1,6 +1,6 @@
 "use strict";
 
-import Mascota from "../models/mascota.model.js";
+import Mascota from "../models/Mascota.model.js";
 import { handleError } from "../utils/errorHandler.js";
 import fs from "fs";
 import path from "path";
@@ -10,13 +10,13 @@ import path from "path";
  * @param {Object} mascotaData - Datos de la mascota
  * @returns {Promise} Promesa con el objeto de la mascota creada
  */
-export async function crearMascota(mascotaData) {
+export async function createMascota(mascotaData) {
   try {
     const nuevaMascota = new Mascota(mascotaData);
     const mascotaGuardada = await nuevaMascota.save();
     return [mascotaGuardada, null];
   } catch (error) {
-    handleError(error, "mascota.service -> crearMascota");
+    handleError(error, "mascota.service -> createMascota");
     return [null, "Error al crear la mascota"];
   }
 }
@@ -25,12 +25,12 @@ export async function crearMascota(mascotaData) {
  * Obtiene todas las mascotas
  * @returns {Promise} Promesa con el objeto de todas las mascotas
  */
-export async function obtenerMascotas() {
+export async function getMascotas() {
   try {
     const mascotas = await Mascota.find().populate('propietario').exec();
     return [mascotas, null];
   } catch (error) {
-    handleError(error, "mascota.service -> obtenerMascotas");
+    handleError(error, "mascota.service -> getMascotas");
     return [null, "Error al obtener las mascotas"];
   }
 }
@@ -40,13 +40,13 @@ export async function obtenerMascotas() {
  * @param {String} id - ID de la mascota
  * @returns {Promise} Promesa con el objeto de la mascota
  */
-export async function obtenerMascotaPorId(id) {
+export async function getMascotaById(id) {
   try {
     const mascota = await Mascota.findById(id).populate('propietario').exec();
     if (!mascota) return [null, "Mascota no encontrada"];
     return [mascota, null];
   } catch (error) {
-    handleError(error, "mascota.service -> obtenerMascotaPorId");
+    handleError(error, "mascota.service -> getMascotaById");
     return [null, "Error al obtener la mascota"];
   }
 }
@@ -57,7 +57,7 @@ export async function obtenerMascotaPorId(id) {
  * @param {Object} mascotaData - Datos actualizados de la mascota
  * @returns {Promise} Promesa con el objeto de la mascota actualizada
  */
-export async function actualizarMascota(id, mascotaData) {
+export async function updateMascota(id, mascotaData) {
   try {
     const mascotaActual = await Mascota.findById(id);
 
@@ -74,7 +74,7 @@ export async function actualizarMascota(id, mascotaData) {
     const mascotaActualizada = await Mascota.findByIdAndUpdate(id, mascotaData, { new: true });
     return [mascotaActualizada, null];
   } catch (error) {
-    handleError(error, "mascota.service -> actualizarMascota");
+    handleError(error, "mascota.service -> updateMascota");
     return [null, "Error al actualizar la mascota"];
   }
 }
@@ -84,7 +84,7 @@ export async function actualizarMascota(id, mascotaData) {
  * @param {String} id - ID de la mascota
  * @returns {Promise} Promesa con el objeto de la mascota eliminada
  */
-export async function eliminarMascota(id) {
+export async function deleteMascota(id) {
   try {
     const mascotaEliminada = await Mascota.findByIdAndDelete(id);
 
@@ -96,15 +96,15 @@ export async function eliminarMascota(id) {
 
     return [mascotaEliminada, null];
   } catch (error) {
-    handleError(error, "mascota.service -> eliminarMascota");
+    handleError(error, "mascota.service -> deleteMascota");
     return [null, "Error al eliminar la mascota"];
   }
 }
 
 export default {
-  crearMascota,
-  obtenerMascotas,
-  obtenerMascotaPorId,
-  actualizarMascota,
-  eliminarMascota,
+  createMascota,
+  getMascotas,
+  getMascotaById,
+  updateMascota,
+  deleteMascota,
 };
