@@ -4,102 +4,94 @@ const Header = () => {
   const location = useLocation(); // Para identificar la ruta actual
 
   return (
-    <header className="bg-primary text-white py-3">
-      <div className="container">
-        <nav className="navbar navbar-expand-lg navbar-dark">
-          <Link to="/" className="navbar-brand d-flex align-items-center">
+    <header className="bg-blue-500 text-white py-4">
+      <div className="container mx-auto px-4">
+        <nav className="flex items-center justify-between">
+          <Link to="/" className="flex items-center">
             {/* Imagen del logo */}
             <img
               src="/images/logo.png"
               alt="Ponteguau Logo"
-              className="logo-img"
-              style={{ height: '180px', width: 'auto' }} // Ajusta el tamaño del logo aquí
+              className="h-24 w-auto" // Ajusta el tamaño del logo aquí
             />
           </Link>
           <button
-            className="navbar-toggler"
+            className="text-white block lg:hidden focus:outline-none"
             type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNav"
-            aria-controls="navbarNav"
-            aria-expanded="false"
             aria-label="Toggle navigation"
           >
-            <span className="navbar-toggler-icon"></span>
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              ></path>
+            </svg>
           </button>
-          <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav ms-auto">
-              <li className="nav-item">
-                <Link
-                  to="/services"
-                  className={`nav-link ${
-                    location.pathname === '/services' ? 'active' : ''
-                  }`}
-                >
-                  Servicios
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link
-                  to="/calendar"
-                  className={`nav-link ${
-                    location.pathname === '/calendar' ? 'active' : ''
-                  }`}
-                >
-                  Calendario
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link
-                  to="/appointment"
-                  className={`nav-link ${
-                    location.pathname === '/appointment' ? 'active' : ''
-                  }`}
-                >
-                  Agendar Cita
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link
-                  to="/admin"
-                  className={`nav-link ${
-                    location.pathname === '/admin' ? 'active' : ''
-                  }`}
-                >
-                  Administración
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link
-                  to="/schedule"
-                  className={`nav-link ${
-                    location.pathname === '/schedule' ? 'active' : ''
-                  }`}
-                >
-                  Gestión de Horarios
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link
-                  to="/pets"
-                  className={`nav-link ${
-                    location.pathname === '/pets' ? 'active' : ''
-                  }`}
-                >
-                  Gestión de Mascotas
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link
-                  to="/login"
-                  className={`nav-link ${
-                    location.pathname === '/login' ? 'active' : ''
-                  }`}
-                >
-                  Iniciar Sesión
-                </Link>
-              </li>
-            </ul>
+          <div className="hidden lg:flex items-center space-x-6">
+            <Link
+              to="/services"
+              className={`${
+                location.pathname === '/services' ? 'text-yellow-400' : ''
+              } hover:text-yellow-400`}
+            >
+              Servicios
+            </Link>
+            <Link
+              to="/calendar"
+              className={`${
+                location.pathname === '/calendar' ? 'text-yellow-400' : ''
+              } hover:text-yellow-400`}
+            >
+              Calendario
+            </Link>
+            <Link
+              to="/appointment"
+              className={`${
+                location.pathname === '/appointment' ? 'text-yellow-400' : ''
+              } hover:text-yellow-400`}
+            >
+              Agendar Cita
+            </Link>
+            <Link
+              to="/admin"
+              className={`${
+                location.pathname === '/admin' ? 'text-yellow-400' : ''
+              } hover:text-yellow-400`}
+            >
+              Administración
+            </Link>
+            <Link
+              to="/schedule"
+              className={`${
+                location.pathname === '/schedule' ? 'text-yellow-400' : ''
+              } hover:text-yellow-400`}
+            >
+              Gestión de Horarios
+            </Link>
+            <Link
+              to="/pets"
+              className={`${
+                location.pathname === '/pets' ? 'text-yellow-400' : ''
+              } hover:text-yellow-400`}
+            >
+              Gestión de Mascotas
+            </Link>
+            <Link
+              to="/login"
+              className={`${
+                location.pathname === '/login' ? 'text-yellow-400' : ''
+              } hover:text-yellow-400`}
+            >
+              Iniciar Sesión
+            </Link>
           </div>
         </nav>
       </div>

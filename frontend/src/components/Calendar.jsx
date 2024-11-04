@@ -1,146 +1,84 @@
+// src/components/Calendar.jsx
 import { useState, useEffect } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import {
-  Box,
-  Heading,
-  VStack,
-  HStack,
-  Text,
-  useToast,
-  Spinner,
-  Card,
-  CardBody,
-} from '@chakra-ui/react';
-import citaService from '../services/cita.service';
+import CitaService from '../services/cita.service';
 
 const Calendar = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const toast = useToast();
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadCitas();
-  }, [loadCitas]);
-
+  // Función para cargar las citas usando el servicio
   const loadCitas = async () => {
     try {
-      const citas = await citaService.getCitas();
+      const citas = await CitaService.getCitas();
       const formattedEvents = citas.map((cita) => ({
         id: cita._id,
         title: `${cita.mascota.nombre} - ${cita.servicio}`,
         start: new Date(cita.fecha),
-        end: new Date(new Date(cita.fecha).getTime() + 60 * 60 * 1000),
-        extendedProps: {
-          mascota: cita.mascota.nombre,
-          propietario: cita.propietario.nombre,
-          servicio: cita.servicio,
-          notas: cita.notas,
-          estado: cita.estado || 'pendiente',
-        },
+        end: new Date(new Date(cita.fecha).getTime() + 60 * 60 * 1000), // Duración de 1 hora
       }));
       setEvents(formattedEvents);
     } catch (error) {
-      console.error(error);
-      toast({
-        title: 'Error',
-        description: 'Error al cargar las citas',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  // Cargar citas cuando el componente se monta
+  useEffect(() => {
+    loadCitas();
+  }, []);
+
+  // Manejar el clic en un evento del calendario
   const handleEventClick = (info) => {
-    const event = info.event;
-    toast({
-      position: 'top',
-      duration: 5000,
-      isClosable: true,
-      render: () => (
-        <Box p={4} bg="white" borderRadius="md" boxShadow="lg">
-          <VStack align="stretch" spacing={2}>
-            <Heading size="md">{event.title}</Heading>
-            <HStack>
-              <Text fontWeight="bold">Mascota:</Text>
-              <Text>{event.extendedProps.mascota}</Text>
-            </HStack>
-            <HStack>
-              <Text fontWeight="bold">Propietario:</Text>
-              <Text>{event.extendedProps.propietario}</Text>
-            </HStack>
-            <HStack>
-              <Text fontWeight="bold">Servicio:</Text>
-              <Text>{event.extendedProps.servicio}</Text>
-            </HStack>
-            {event.extendedProps.notas && (
-              <HStack>
-                <Text fontWeight="bold">Notas:</Text>
-                <Text>{event.extendedProps.notas}</Text>
-              </HStack>
-            )}
-            <HStack>
-              <Text fontWeight="bold">Estado:</Text>
-              <Text>{event.extendedProps.estado}</Text>
-            </HStack>
-          </VStack>
-        </Box>
-      ),
-    });
+    alert(`Evento: ${info.event.title}`);
   };
 
   if (loading) {
     return (
-      <Box height="100vh" display="flex" alignItems="center" justifyContent="center">
-        <Spinner size="xl" color="blue.500" />
-      </Box>
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-16 h-16 border-4 border-blue-500 border-dotted rounded-full animate-spin"></div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardBody>
-        <HStack spacing={2} mb={6}>
-          <CalendarIcon size={24} color="blue" />
-          <Heading size="lg">Calendario de Citas</Heading>
-        </HStack>
-        <Box
-          borderWidth="1px"
-          borderRadius="lg"
-          p={4}
-          className="calendar-container"
-        >
-          <FullCalendar
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView="timeGridWeek"
-            headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay',
-            }}
-            events={events}
-            eventClick={handleEventClick}
-            slotMinTime="08:00:00"
-            slotMaxTime="20:00:00"
-            allDaySlot={false}
-            locale="es"
-            buttonText={{
-              today: 'Hoy',
-              month: 'Mes',
-              week: 'Semana',
-              day: 'Día',
-            }}
-            height="auto"
-          />
-        </Box>
-      </CardBody>
-    </Card>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4 text-center">Calendario de Citas</h1>
+
+      {/* Mostrar error si existe */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 text-red-800 rounded-lg">
+          <span className="font-bold">Error:</span> {error}
+        </div>
+      )}
+
+      {/* Componente de FullCalendar */}
+      <FullCalendar
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        initialView="dayGridMonth"
+        headerToolbar={{
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay',
+        }}
+        events={events}
+        eventClick={handleEventClick}
+        locale="es"
+        buttonText={{
+          today: 'Hoy',
+          month: 'Mes',
+          week: 'Semana',
+          day: 'Día',
+        }}
+        height="auto"
+      />
+    </div>
   );
 };
 

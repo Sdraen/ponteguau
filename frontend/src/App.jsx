@@ -1,16 +1,13 @@
-import { ChakraProvider, Container, Box } from '@chakra-ui/react';
-import Calendar from './components/Calendar.jsx';
+// src/App.jsx
+import { AuthProvider } from './context/AuthContext';
+import AppRoutes from './routes/Approutes';
 
-function App() {
+const App = () => {
   return (
-    <ChakraProvider>
-      <Box minH="100vh" bg="gray.50" py={4}>
-        <Container maxW="container.xl">
-          <Calendar />
-        </Container>
-      </Box>
-    </ChakraProvider>
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
-}
+};
 
 export default App;
