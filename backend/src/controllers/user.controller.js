@@ -4,7 +4,7 @@ import { respondSuccess, respondError } from "../utils/resHandler.js";
 import UserService from "../services/user.service.js";
 import { userBodySchema, userIdSchema } from "../schema/user.schema.js";
 import { handleError } from "../utils/errorHandler.js";
-
+import Role from "../models/role.model.js";
 /**
  * Obtiene todos los usuarios
  * @param {Object} req - Objeto de petición
@@ -35,7 +35,19 @@ async function createUser(req, res) {
     const { error: bodyError } = userBodySchema.validate(body);
     if (bodyError) return respondError(req, res, 400, bodyError.message);
 
-    const [newUser, userError] = await UserService.createUser(body);
+    // Busca el rol "user" en la base de datos
+    const userRole = await Role.findOne({ name: "user" });
+    if (!userRole) {
+      return respondError(req, res, 500, "No se pudo encontrar el rol de usuario");
+    }
+
+    // Asigna el rol de "user" al usuario
+    const userData = {
+      ...body,
+      roles: [userRole._id], // Asigna el rol "user" automáticamente
+    };
+
+    const [newUser, userError] = await UserService.createUser(userData);
 
     if (userError) return respondError(req, res, 400, userError);
     if (!newUser) {

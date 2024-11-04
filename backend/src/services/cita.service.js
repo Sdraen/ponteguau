@@ -1,9 +1,8 @@
 "use strict";
 
 import Cita from "../models/cita.model.js";
-import Mascota from "../models/mascota.model.js";
 import moment from "moment";
-import { obtenerPrecioServicio, calcularPrecioTotal } from "./servicio.service.js";
+import { calcularPrecioTotal } from "./servicio.service.js";
 
 /**
  * Verifica si existe una cita para una o más mascotas en una fecha específica.
