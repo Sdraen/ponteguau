@@ -7,13 +7,13 @@ Software de gestión de citas y control de servicios para una peluquería canina
 
 La arquitectura del backend está compuesta por:
 
-- **NodeJS** (v18.16)
+- **NodeJS** (v18.20.2)
 - **ExpressJS** (v4.18.2)
-- **MongoDB**
-- **JWT** para autenticación
+- **MongoDB** (v6.6.2)
+- **JWT** (v9.0.2)
 - **Nodemailer** para notificaciones por correo electrónico
 - **Docker** para contenedorización
-- **NPM** para la gestión de dependencias
+- **NPM** (v10.2.4)
 
 ## Configuración de la Base de Datos MongoDB
 
