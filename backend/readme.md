@@ -69,32 +69,6 @@ Recuerda mantener seguro este archivo y no compartir tus credenciales en reposit
 
    Este comando instalará todos los paquetes necesarios especificados en el archivo `package.json`.
 
-## Docker
-
-Para construir y ejecutar el backend en un contenedor Docker:
-
-1. Abre una terminal en la carpeta raíz del backend donde se clonó el repositorio.
-
-2. Ejecuta el siguiente comando para construir la imagen del backend:
-
-   ```bash
-   docker build -t backend .
-   ```
-
-3. Una vez creada la imagen, corre el contenedor con:
-
-   ```bash
-   docker run --rm -ti -p 3000:3000 -v ${pwd}:/home backend
-   ```
-
-4. Dentro del contenedor, instala las dependencias y ejecuta el backend:
-
-   ```bash
-   cd home
-   npm install
-   npm start
-   ```
-
 ## Clonar el Repositorio
 
 Para obtener el proyecto, ejecuta este comando en la carpeta donde deseas clonarlo:
@@ -175,3 +149,28 @@ http://<ip-servidor>:3000
 ```
 
 ---
+## Docker
+
+Para construir y ejecutar el backend en un contenedor Docker:
+
+1. Abre una terminal en la carpeta raíz del backend donde se clonó el repositorio.
+
+2. Ejecuta el siguiente comando para construir la imagen del backend:
+
+   ```bash
+   docker build -t backend .
+   ```
+
+3. Una vez creada la imagen, corre el contenedor con:
+
+   ```bash
+   docker run --rm -ti -p 3000:3000 -v ${pwd}:/home backend
+   ```
+
+4. Dentro del contenedor, instala las dependencias y ejecuta el backend:
+
+   ```bash
+   cd home
+   npm install
+   npm start
+   ```
