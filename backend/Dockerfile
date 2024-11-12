@@ -1,24 +1,31 @@
-# Usa una imagen base oficial de Node.js (versión 18) como la base
-FROM node:18
+# Usa la imagen base de Ubuntu Jammy
+FROM ubuntu:jammy
 
-# Establece el directorio de trabajo en el contenedor
+# Instala las dependencias necesarias
+RUN apt-get update && \
+    apt-get install -y curl && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Descarga y extrae Node.js versión 20.11.1
+ADD https://nodejs.org/dist/v20.11.1/node-v20.11.1-linux-x64.tar.xz /usr/local/node.tar.xz
+RUN tar -xJf /usr/local/node.tar.xz -C /usr/local --strip-components=1 && \
+    rm /usr/local/node.tar.xz
+
+# Verifica la instalación de Node.js
+RUN node -v && npm -v
+
+# Crea el directorio de la aplicación y establece el directorio de trabajo
 WORKDIR /app
 
-# Copia el archivo package.json y package-lock.json al contenedor
+# Copia los archivos package.json y package-lock.json e instala dependencias
 COPY package*.json ./
-
-# Instala las dependencias
 RUN npm install
 
-# Copia el resto de los archivos del proyecto al contenedor
+# Copia el resto del código de la aplicación
 COPY . .
 
-# Expone el puerto en el que se ejecutará la aplicación
+# Expone el puerto 3000
 EXPOSE 3000
 
-# Establece las variables de entorno desde un archivo .env (opcional)
-# Si estás usando Docker Compose, puedes configurar las variables de entorno ahí
-# ENV NODE_ENV=production
-
-# Comando para iniciar la aplicación
-CMD ["npm", "start"]
+# Comando para correr el backend en modo de desarrollo
+CMD ["npm", "run", "dev"]
