@@ -1,10 +1,10 @@
 const HomePage = () => {
   return (
-    <div className="bg-white">
+    <div className="min-h-screen bg-gray-100 pt-20">
       {/* Hero Section */}
-      <section className="relative bg-gray-100 py-10">
+      <section className="py-10 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mt-6">
+          <h1 className="text-4xl font-bold text-gray-900">
             ¡Haz que tu mascota luzca y se sienta increíble!
           </h1>
           <p className="mt-4 text-lg text-gray-600">
@@ -21,7 +21,7 @@ const HomePage = () => {
       </section>
 
       {/* Pet Photos */}
-      <section className="py-10 bg-white">
+      <section className="py-10 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
             Algunos de nuestros clientes felices
