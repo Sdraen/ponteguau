@@ -7,9 +7,6 @@ import { handleError } from "../utils/errorHandler.js";
 import path from "path";
 import fs from "fs";
 
-/**
- * Crea una nueva mascota con imágenes opcionales antes y después de la peluquería.
- */
 export async function createMascota(req, res) {
   try {
     const { body } = req;
@@ -37,9 +34,7 @@ export async function createMascota(req, res) {
   }
 }
 
-/**
- * Actualiza una mascota por su ID, incluyendo las imágenes antes y después.
- */
+
 export async function updateMascota(req, res) {
   try {
     const { params, body } = req;
@@ -70,9 +65,7 @@ export async function updateMascota(req, res) {
   }
 }
 
-/**
- * Elimina una mascota y sus imágenes por su ID.
- */
+
 export async function deleteMascota(req, res) {
   try {
     const { params } = req;
@@ -93,9 +86,7 @@ export async function deleteMascota(req, res) {
   }
 }
 
-/**
- * Actualiza solo las imágenes de una mascota
- */
+
 export async function updateMascotaImagenes(req, res) {
   try {
     const { params } = req;

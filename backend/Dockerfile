@@ -3,7 +3,7 @@ FROM ubuntu:jammy
 
 # Instala las dependencias necesarias
 RUN apt-get update && \
-    apt-get install -y curl && \
+    apt-get install -y curl git && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Descarga y extrae Node.js versión 20.11.1
