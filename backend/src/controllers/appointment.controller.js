@@ -1,73 +1,99 @@
-import Appointment from '../models/Appointment.js'; // Asegúrate de que la ruta sea correcta
+import * as appointmentService from '../services/appointment.service.js';
+import { appointmentSchema } from '../schemas/appointment.schema.js';
 
-// Crear una nueva cita
-export const createAppointment = async (req, res) => {
+export const createAppointment = async (req, res, next) => {
   try {
-    const appointment = new Appointment(req.body);
-    await appointment.save();
-    res.status(201).json({ message: 'Cita creada exitosamente', appointment });
+    // Validar los datos de entrada con Joi
+    const validatedData = await appointmentSchema.validateAsync(
+      {
+        ...req.body,
+        userId: req.user._id,
+        userEmail: req.user.email,
+        userName: req.user.name,
+      },
+      { abortEarly: false }
+    );
+
+    // Crear la cita usando el servicio
+    const appointment = await appointmentService.createAppointment(validatedData);
+
+    res.status(201).json({ success: true, data: appointment });
   } catch (error) {
-    res.status(500).json({ message: 'Error al crear la cita', error });
-  }
-};
-
-// Obtener todas las citas
-export const getAppointments = async (req, res) => {
-  try {
-    const appointments = await Appointment.find()
-      .populate('userId', 'name email') // Ajusta los campos según el modelo User
-      .populate('petId', 'nombre raza') // Ajusta los campos según el modelo Mascota
-      .populate('serviceId', 'name price'); // Ajusta los campos según el modelo Service
-    res.status(200).json(appointments);
-  } catch (error) {
-    res.status(500).json({ message: 'Error al obtener las citas', error });
-  }
-};
-
-// Obtener una cita por ID
-export const getAppointmentById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const appointment = await Appointment.findById(id)
-      .populate('userId', 'name email')
-      .populate('petId', 'nombre raza')
-      .populate('serviceId', 'name price');
-    if (!appointment) {
-      return res.status(404).json({ message: 'Cita no encontrada' });
+    if (error.isJoi) {
+      // Si es un error de validación, enviar un código de estado 400
+      res.status(400).json({ success: false, errors: error.details });
+    } else {
+      console.error('Error creating appointment:', error.message);
+      next(error);
     }
-    res.status(200).json(appointment);
-  } catch (error) {
-    res.status(500).json({ message: 'Error al obtener la cita', error });
   }
 };
 
-// Actualizar una cita por ID
-export const updateAppointment = async (req, res) => {
+export const getUserAppointments = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const updatedAppointment = await Appointment.findByIdAndUpdate(id, req.body, { new: true })
-      .populate('userId', 'name email')
-      .populate('petId', 'nombre raza')
-      .populate('serviceId', 'name price');
-    if (!updatedAppointment) {
-      return res.status(404).json({ message: 'Cita no encontrada' });
-    }
-    res.status(200).json({ message: 'Cita actualizada exitosamente', updatedAppointment });
+    const appointments = await appointmentService.getUserAppointments(req.user._id);
+    res.json({ success: true, data: appointments });
   } catch (error) {
-    res.status(500).json({ message: 'Error al actualizar la cita', error });
+    console.error('Error fetching user appointments:', error.message);
+    next(error);
   }
 };
 
-// Eliminar una cita por ID
-export const deleteAppointment = async (req, res) => {
+export const getAppointment = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const deletedAppointment = await Appointment.findByIdAndDelete(id);
-    if (!deletedAppointment) {
-      return res.status(404).json({ message: 'Cita no encontrada' });
+    const appointment = await appointmentService.getAppointmentById(req.params.id);
+
+    // Verificar si el usuario tiene acceso a la cita
+    if (appointment.userId.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+      return res.status(403).json({ success: false, message: 'Not authorized to access this appointment' });
     }
-    res.status(200).json({ message: 'Cita eliminada exitosamente', deletedAppointment });
+
+    res.json({ success: true, data: appointment });
   } catch (error) {
-    res.status(500).json({ message: 'Error al eliminar la cita', error });
+    console.error('Error fetching appointment:', error.message);
+    next(error);
+  }
+};
+
+export const updateAppointment = async (req, res, next) => {
+  try {
+    // Validar los datos de entrada con Joi
+    const validatedData = await appointmentSchema.validateAsync(
+      {
+        ...req.body,
+        userId: req.user._id,
+        userEmail: req.user.email,
+        userName: req.user.name,
+      },
+      { abortEarly: false }
+    );
+
+    // Actualizar la cita usando el servicio
+    const appointment = await appointmentService.updateAppointment(
+      req.params.id,
+      validatedData,
+      req.user.email,
+      req.user.name
+    );
+
+    res.json({ success: true, data: appointment });
+  } catch (error) {
+    if (error.isJoi) {
+      // Si es un error de validación, enviar un código de estado 400
+      res.status(400).json({ success: false, errors: error.details });
+    } else {
+      console.error('Error updating appointment:', error.message);
+      next(error);
+    }
+  }
+};
+
+export const deleteAppointment = async (req, res, next) => {
+  try {
+    const appointment = await appointmentService.deleteAppointment(req.params.id, req.user.email, req.user.name);
+    res.json({ success: true, data: {} });
+  } catch (error) {
+    console.error('Error deleting appointment:', error.message);
+    next(error);
   }
 };

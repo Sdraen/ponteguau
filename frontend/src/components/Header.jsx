@@ -51,7 +51,7 @@ const Header = () => {
           >
             <NavLink to="/services" currentPath={location.pathname}>Servicios</NavLink>
             <NavLink to="/calendar" currentPath={location.pathname}>Calendario</NavLink>
-            <NavLink to="/appointment" currentPath={location.pathname}>Agendar Cita</NavLink>
+            <NavLink to="/appointments" currentPath={location.pathname}>Agendar Cita</NavLink>
             <NavLink to="/admin" currentPath={location.pathname}>Administración</NavLink>
             <NavLink to="/schedule" currentPath={location.pathname}>Gestión de Horarios</NavLink>
             <NavLink to="/pets" currentPath={location.pathname}>Gestión de Mascotas</NavLink>

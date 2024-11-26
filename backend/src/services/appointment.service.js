@@ -1,4 +1,5 @@
-import Appointment from '../models/Appointment.js';
+import Appointment from '../models/Appointment.model.js';
+import { sendEmail } from '../utils/emailService.js';
 
 /**
  * Crea una nueva cita.
@@ -8,20 +9,37 @@ import Appointment from '../models/Appointment.js';
 export const createAppointment = async (appointmentData) => {
   try {
     const appointment = new Appointment(appointmentData);
-    return await appointment.save();
+    const savedAppointment = await appointment.save();
+
+    // Enviar correo de confirmación
+    await sendEmail({
+      email: appointmentData.userEmail,
+      subject: 'Confirmación de Cita - Ponteguau',
+      template: 'appointmentConfirmation',
+      data: {
+        name: appointmentData.userName,
+        appointment: {
+          date: savedAppointment.date,
+          startTime: savedAppointment.startTime,
+          endTime: savedAppointment.endTime,
+        },
+      },
+    });
+
+    return savedAppointment;
   } catch (error) {
     throw new Error(`Error al crear la cita: ${error.message}`);
   }
 };
 
 /**
- * Obtiene todas las citas con relaciones pobladas.
+ * Obtiene todas las citas de un usuario.
+ * @param {String} userId - ID del usuario.
  * @returns {Array} - Lista de citas.
  */
-export const getAllAppointments = async () => {
+export const getUserAppointments = async (userId) => {
   try {
-    return await Appointment.find()
-      .populate('userId', 'name email')
+    return await Appointment.find({ userId })
       .populate('petId', 'nombre raza')
       .populate('serviceId', 'name price');
   } catch (error) {
@@ -37,9 +55,9 @@ export const getAllAppointments = async () => {
 export const getAppointmentById = async (id) => {
   try {
     const appointment = await Appointment.findById(id)
-      .populate('userId', 'name email')
       .populate('petId', 'nombre raza')
       .populate('serviceId', 'name price');
+
     if (!appointment) throw new Error('Cita no encontrada');
     return appointment;
   } catch (error) {
@@ -48,18 +66,37 @@ export const getAppointmentById = async (id) => {
 };
 
 /**
- * Actualiza una cita por ID.
+ * Actualiza una cita.
  * @param {String} id - ID de la cita.
  * @param {Object} updateData - Datos a actualizar.
  * @returns {Object} - Cita actualizada.
  */
-export const updateAppointment = async (id, updateData) => {
+export const updateAppointment = async (id, updateData, userEmail, userName) => {
   try {
-    const updatedAppointment = await Appointment.findByIdAndUpdate(id, updateData, { new: true })
-      .populate('userId', 'name email')
-      .populate('petId', 'nombre raza')
-      .populate('serviceId', 'name price');
-    if (!updatedAppointment) throw new Error('Cita no encontrada');
+    const appointment = await Appointment.findById(id);
+    if (!appointment) throw new Error('Cita no encontrada');
+
+    const updatedAppointment = await Appointment.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (updateData.status === 'cancelled') {
+      await sendEmail({
+        email: userEmail,
+        subject: 'Cancelación de Cita - Ponteguau',
+        template: 'appointmentCancellation',
+        data: {
+          name: userName,
+          appointment: {
+            date: updatedAppointment.date,
+            startTime: updatedAppointment.startTime,
+            endTime: updatedAppointment.endTime,
+          },
+        },
+      });
+    }
+
     return updatedAppointment;
   } catch (error) {
     throw new Error(`Error al actualizar la cita: ${error.message}`);
@@ -67,15 +104,34 @@ export const updateAppointment = async (id, updateData) => {
 };
 
 /**
- * Elimina una cita por ID.
+ * Elimina una cita.
  * @param {String} id - ID de la cita.
+ * @param {String} userEmail - Correo del usuario.
+ * @param {String} userName - Nombre del usuario.
  * @returns {Object} - Cita eliminada.
  */
-export const deleteAppointment = async (id) => {
+export const deleteAppointment = async (id, userEmail, userName) => {
   try {
-    const deletedAppointment = await Appointment.findByIdAndDelete(id);
-    if (!deletedAppointment) throw new Error('Cita no encontrada');
-    return deletedAppointment;
+    const appointment = await Appointment.findById(id);
+    if (!appointment) throw new Error('Cita no encontrada');
+
+    await appointment.deleteOne();
+
+    await sendEmail({
+      email: userEmail,
+      subject: 'Cancelación de Cita - Ponteguau',
+      template: 'appointmentCancellation',
+      data: {
+        name: userName,
+        appointment: {
+          date: appointment.date,
+          startTime: appointment.startTime,
+          endTime: appointment.endTime,
+        },
+      },
+    });
+
+    return appointment;
   } catch (error) {
     throw new Error(`Error al eliminar la cita: ${error.message}`);
   }

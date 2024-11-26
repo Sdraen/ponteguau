@@ -1,44 +1,93 @@
-import { useForm } from 'react-hook-form';
-import { useState } from 'react';
-import PropTypes from 'prop-types';
+import { useState, useEffect } from 'react';
 import { createMascota, updateMascota } from '../services/mascota.service';
 import toast from 'react-hot-toast';
 
-export default function MascotaForm({ mascota, onSuccess }) {
-  const [loading, setLoading] = useState(false);
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    defaultValues: mascota || {
-      chip: false,
-      esterilizado: false,
-      otitis: false,
-      pulgas: false,
-      heridas: false,
-    }
+export default function MascotaForm({ mascota, onSuccess, propietarioId }) {
+  const [formData, setFormData] = useState({
+    nombre: '',
+    fecha_nacimiento: '',
+    edad: '',
+    sexo: '',
+    raza: '',
+    peso: '',
+    enfermedades: '',
+    chip: false,
+    esterilizado: false,
+    otitis: false,
+    pulgas: false,
+    heridas: false,
+    personalidad: '',
+    recordatorio: '',
+    nota: '',
+    nodos: '',
+    imagenAntes: null,
+    imagenDespues: null,
+    notasAdicionales: [], // Agregamos este campo
   });
 
-  const onSubmit = async (data) => {
+  const [notaAdicional, setNotaAdicional] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (mascota) {
+      setFormData({
+        ...mascota,
+        imagenAntes: null,
+        imagenDespues: null,
+      });
+    }
+  }, [mascota]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+
+    if (type === 'checkbox') {
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else if (type === 'file') {
+      setFormData((prev) => ({ ...prev, [name]: files[0] }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleAddNotaAdicional = () => {
+    if (notaAdicional.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        notasAdicionales: [...prev.notasAdicionales, notaAdicional.trim()],
+      }));
+      setNotaAdicional('');
+    }
+  };
+
+  const handleRemoveNotaAdicional = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      notasAdicionales: prev.notasAdicionales.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
 
     try {
-      const formData = new FormData();
-      
-      // Añadir todos los campos del formulario al FormData
-      Object.keys(data).forEach((key) => {
-        formData.append(key, data[key]);
+      const form = new FormData();
+      Object.keys(formData).forEach((key) => {
+        if (key === 'fecha_nacimiento') {
+          form.append(key, new Date(formData[key]).toISOString()); // Convertimos a ISO 8601
+        } else if (key === 'notasAdicionales') {
+          formData[key].forEach((nota) => form.append('notasAdicionales[]', nota));
+        } else if (formData[key] !== null && formData[key] !== '') {
+          form.append(key, formData[key]);
+        }
       });
 
-      // Añadir imágenes si existen
-      if (data.imagenAntes && data.imagenAntes[0]) {
-        formData.append('imagenAntes', data.imagenAntes[0]);
-      }
-      if (data.imagenDespues && data.imagenDespues[0]) {
-        formData.append('imagenDespues', data.imagenDespues[0]);
-      }
+      form.append('propietario', propietarioId); // Agregamos el ID del propietario
 
-      // Llamar a la función de servicio correspondiente
       const response = mascota?._id
-        ? await updateMascota(mascota._id, formData)
-        : await createMascota(formData);
+        ? await updateMascota(mascota._id, form)
+        : await createMascota(form);
 
       toast.success(mascota?._id ? 'Mascota actualizada correctamente' : 'Mascota creada correctamente');
       onSuccess?.(response);
@@ -51,34 +100,67 @@ export default function MascotaForm({ mascota, onSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-4 bg-white shadow rounded-lg">
+    <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-white shadow rounded-lg">
       <h3 className="text-lg font-semibold text-gray-800">{mascota ? 'Editar Mascota' : 'Registrar Nueva Mascota'}</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <InputField label="Nombre" name="nombre" register={register} errors={errors} required />
-        <InputField label="Fecha de Nacimiento" name="fecha_nacimiento" type="date" register={register} errors={errors} required />
-        <InputField label="Edad" name="edad" type="number" register={register} errors={errors} required />
-        <SelectField label="Sexo" name="sexo" register={register} errors={errors} options={['Macho', 'Hembra']} required />
-        <InputField label="Raza" name="raza" register={register} errors={errors} required />
-        <InputField label="Peso" name="peso" type="number" step="0.1" register={register} errors={errors} required />
-        
-        <TextAreaField label="Enfermedades" name="enfermedades" register={register} errors={errors} rows="3" required />
-        
-        <CheckboxGroup label="Características" items={[
-          { name: 'chip', label: 'Chip' },
-          { name: 'esterilizado', label: 'Esterilizado' },
-          { name: 'otitis', label: 'Otitis' },
-          { name: 'pulgas', label: 'Pulgas' },
-          { name: 'heridas', label: 'Heridas' },
-        ]} register={register} />
-        
-        <InputField label="Personalidad" name="personalidad" register={register} errors={errors} />
-        <InputField label="Recordatorio" name="recordatorio" register={register} errors={errors} />
-        <InputField label="Nota" name="nota" type="number" register={register} errors={errors} />
-        <InputField label="Nodos" name="nodos" type="number" register={register} errors={errors} />
 
-        <ImageUploadField label="Imagen Antes" name="imagenAntes" register={register} />
-        <ImageUploadField label="Imagen Después" name="imagenDespues" register={register} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <InputField label="Nombre" name="nombre" value={formData.nombre} onChange={handleChange} required />
+        <InputField label="Fecha de Nacimiento" name="fecha_nacimiento" type="date" value={formData.fecha_nacimiento} onChange={handleChange} required />
+        <InputField label="Edad" name="edad" type="number" value={formData.edad} onChange={handleChange} required />
+        <SelectField label="Sexo" name="sexo" value={formData.sexo} onChange={handleChange} options={['Macho', 'Hembra']} required />
+        <InputField label="Raza" name="raza" value={formData.raza} onChange={handleChange} required />
+        <InputField label="Peso" name="peso" type="number" step="0.1" value={formData.peso} onChange={handleChange} required />
+        <TextAreaField label="Enfermedades" name="enfermedades" value={formData.enfermedades} onChange={handleChange} rows="3" required />
+        <CheckboxGroup
+          label="Características"
+          items={[
+            { name: 'chip', label: 'Chip', checked: formData.chip },
+            { name: 'esterilizado', label: 'Esterilizado', checked: formData.esterilizado },
+            { name: 'otitis', label: 'Otitis', checked: formData.otitis },
+            { name: 'pulgas', label: 'Pulgas', checked: formData.pulgas },
+            { name: 'heridas', label: 'Heridas', checked: formData.heridas },
+          ]}
+          onChange={handleChange}
+        />
+        <InputField label="Personalidad" name="personalidad" value={formData.personalidad} onChange={handleChange} required />
+        <InputField label="Recordatorio" name="recordatorio" value={formData.recordatorio} onChange={handleChange} />
+        <InputField label="Nota" name="nota" type="number" value={formData.nota} onChange={handleChange} required />
+        <InputField label="Nodos" name="nodos" type="number" value={formData.nodos} onChange={handleChange} />
+        <ImageUploadField label="Imagen Antes" name="imagenAntes" onChange={handleChange} />
+        <ImageUploadField label="Imagen Después" name="imagenDespues" onChange={handleChange} />
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Notas Adicionales</label>
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            value={notaAdicional}
+            onChange={(e) => setNotaAdicional(e.target.value)}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          />
+          <button
+            type="button"
+            onClick={handleAddNotaAdicional}
+            className="px-3 py-1 bg-indigo-600 text-white rounded-md"
+          >
+            Añadir
+          </button>
+        </div>
+        <ul className="list-disc pl-5">
+          {formData.notasAdicionales.map((nota, index) => (
+            <li key={index} className="flex justify-between items-center">
+              {nota}
+              <button
+                type="button"
+                onClick={() => handleRemoveNotaAdicional(index)}
+                className="text-red-600 hover:underline"
+              >
+                Eliminar
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
 
       <div className="flex justify-end space-x-3 mt-4">
@@ -100,163 +182,3 @@ export default function MascotaForm({ mascota, onSuccess }) {
     </form>
   );
 }
-
-// Componente InputField
-function InputField({ label, name, type = 'text', register, errors, required, step }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-      <input
-        type={type}
-        step={step}
-        {...register(name, { required: required && `${label} es requerido` })}
-        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-      />
-      {errors[name] && <span className="text-red-500 text-sm">{errors[name].message}</span>}
-    </div>
-  );
-}
-
-InputField.propTypes = {
-  label: PropTypes.string.isRequired,
-  name: PropTypes.string.isRequired,
-  type: PropTypes.string,
-  register: PropTypes.func.isRequired,
-  errors: PropTypes.object.isRequired,
-  required: PropTypes.bool,
-  step: PropTypes.string,
-};
-
-// Componente SelectField
-function SelectField({ label, name, register, errors, options, required }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-      <select
-        {...register(name, { required: required && `${label} es requerido` })}
-        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-      >
-        <option value="">Seleccionar...</option>
-        {options.map(option => (
-          <option key={option} value={option}>{option}</option>
-        ))}
-      </select>
-      {errors[name] && <span className="text-red-500 text-sm">{errors[name].message}</span>}
-    </div>
-  );
-}
-
-SelectField.propTypes = {
-  label: PropTypes.string.isRequired,
-  name: PropTypes.string.isRequired,
-  register: PropTypes.func.isRequired,
-  errors: PropTypes.object.isRequired,
-  options: PropTypes.arrayOf(PropTypes.string).isRequired,
-  required: PropTypes.bool,
-};
-
-// Componente TextAreaField
-function TextAreaField({ label, name, register, errors, rows, required }) {
-  return (
-    <div className="col-span-2">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-      <textarea
-        {...register(name, { required: required && `${label} es requerido` })}
-        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-        rows={rows}
-      />
-      {errors[name] && <span className="text-red-500 text-sm">{errors[name].message}</span>}
-    </div>
-  );
-}
-
-TextAreaField.propTypes = {
-  label: PropTypes.string.isRequired,
-  name: PropTypes.string.isRequired,
-  register: PropTypes.func.isRequired,
-  errors: PropTypes.object.isRequired,
-  rows: PropTypes.number.isRequired,
-  required: PropTypes.bool,
-};
-
-// Componente CheckboxGroup
-function CheckboxGroup({ label, items, register }) {
-  return (
-    <div className="col-span-2">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-      <div className="flex items-center space-x-4 mt-2">
-        {items.map(item => (
-          <label key={item.name} className="flex items-center">
-            <input
-              type="checkbox"
-              {...register(item.name)}
-              className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            />
-            <span className="ml-2">{item.label}</span>
-          </label>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-CheckboxGroup.propTypes = {
-  label: PropTypes.string.isRequired,
-  items: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      label: PropTypes.string.isRequired,
-    })
-  ).isRequired,
-  register: PropTypes.func.isRequired,
-};
-
-// Componente ImageUploadField
-function ImageUploadField({ label, name, register }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-      <input
-        type="file"
-        accept="image/*"
-        {...register(name)}
-        className="mt-1 block w-full"
-      />
-    </div>
-  );
-}
-
-ImageUploadField.propTypes = {
-  label: PropTypes.string.isRequired,
-  name: PropTypes.string.isRequired,
-  register: PropTypes.func.isRequired,
-};
-
-// Definición de los tipos de las props
-MascotaForm.propTypes = {
-  mascota: PropTypes.shape({
-    _id: PropTypes.string,
-    nombre: PropTypes.string.isRequired,
-    fecha_nacimiento: PropTypes.string.isRequired,
-    edad: PropTypes.number.isRequired,
-    sexo: PropTypes.oneOf(['Macho', 'Hembra']).isRequired,
-    raza: PropTypes.string.isRequired,
-    peso: PropTypes.number.isRequired,
-    chip: PropTypes.bool,
-    esterilizado: PropTypes.bool,
-    enfermedades: PropTypes.string.isRequired,
-    otitis: PropTypes.bool,
-    pulgas: PropTypes.bool,
-    heridas: PropTypes.bool,
-    personalidad: PropTypes.string.isRequired,
-    recordatorio: PropTypes.string.isRequired,
-    nota: PropTypes.number.isRequired,
-    nodos: PropTypes.number.isRequired,
-    imagenAntes: PropTypes.string,
-    imagenDespues: PropTypes.string,
-    propietario: PropTypes.string,
-    historialCitas: PropTypes.arrayOf(PropTypes.string),
-    notasAdicionales: PropTypes.arrayOf(PropTypes.string),
-  }),
-  onSuccess: PropTypes.func,
-};
