@@ -1,184 +1,258 @@
-import { useState, useEffect } from 'react';
-import { createMascota, updateMascota } from '../services/mascota.service';
-import toast from 'react-hot-toast';
+import { useState } from 'react';
+import axios from '../services/root.service';
+import { useNavigate } from 'react-router-dom';
 
-export default function MascotaForm({ mascota, onSuccess, propietarioId }) {
-  const [formData, setFormData] = useState({
+const MascotaForm = () => {
+  const [mascota, setMascota] = useState({
     nombre: '',
     fecha_nacimiento: '',
     edad: '',
     sexo: '',
     raza: '',
     peso: '',
-    enfermedades: '',
     chip: false,
     esterilizado: false,
+    enfermedades: '',
     otitis: false,
     pulgas: false,
     heridas: false,
     personalidad: '',
     recordatorio: '',
-    nota: '',
-    nodos: '',
+    nodos: 0,
+    nota: 0,
     imagenAntes: null,
     imagenDespues: null,
-    notasAdicionales: [], // Agregamos este campo
+    notasAdicionales: '', // Notas adicionales
   });
 
-  const [notaAdicional, setNotaAdicional] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (mascota) {
-      setFormData({
-        ...mascota,
-        imagenAntes: null,
-        imagenDespues: null,
-      });
-    }
-  }, [mascota]);
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
 
-    if (type === 'checkbox') {
-      setFormData((prev) => ({ ...prev, [name]: checked }));
-    } else if (type === 'file') {
-      setFormData((prev) => ({ ...prev, [name]: files[0] }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleAddNotaAdicional = () => {
-    if (notaAdicional.trim()) {
-      setFormData((prev) => ({
-        ...prev,
-        notasAdicionales: [...prev.notasAdicionales, notaAdicional.trim()],
-      }));
-      setNotaAdicional('');
-    }
-  };
-
-  const handleRemoveNotaAdicional = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      notasAdicionales: prev.notasAdicionales.filter((_, i) => i !== index),
+    setMascota((prevState) => ({
+      ...prevState,
+      [name]: type === 'checkbox' ? checked : files ? files[0] : value,
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+
+    const formData = new FormData();
+    Object.keys(mascota).forEach((key) => {
+      if (key === 'imagenAntes' || key === 'imagenDespues') {
+        if (mascota[key]) formData.append(key, mascota[key]); // Archivos
+      } else if (Array.isArray(mascota[key])) {
+        formData.append(key, JSON.stringify(mascota[key])); // Arrays como JSON string
+      } else {
+        formData.append(key, mascota[key]);
+      }
+    });
 
     try {
-      const form = new FormData();
-      Object.keys(formData).forEach((key) => {
-        if (key === 'fecha_nacimiento') {
-          form.append(key, new Date(formData[key]).toISOString()); // Convertimos a ISO 8601
-        } else if (key === 'notasAdicionales') {
-          formData[key].forEach((nota) => form.append('notasAdicionales[]', nota));
-        } else if (formData[key] !== null && formData[key] !== '') {
-          form.append(key, formData[key]);
-        }
+      const response = await axios.post('/mascota', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
-
-      form.append('propietario', propietarioId); // Agregamos el ID del propietario
-
-      const response = mascota?._id
-        ? await updateMascota(mascota._id, form)
-        : await createMascota(form);
-
-      toast.success(mascota?._id ? 'Mascota actualizada correctamente' : 'Mascota creada correctamente');
-      onSuccess?.(response);
+      setMessage({ type: 'success', text: 'Mascota registrada exitosamente.' });
+      console.log('Mascota registrada:', response.data);
     } catch (error) {
-      console.error(error);
-      toast.error('Error al procesar la mascota');
-    } finally {
-      setLoading(false);
+      setMessage({
+        type: 'error',
+        text: 'Error al registrar la mascota. Por favor, intenta de nuevo.',
+      });
+      console.error('Error al registrar la mascota:', error.response?.data || error.message);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-white shadow rounded-lg">
-      <h3 className="text-lg font-semibold text-gray-800">{mascota ? 'Editar Mascota' : 'Registrar Nueva Mascota'}</h3>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <InputField label="Nombre" name="nombre" value={formData.nombre} onChange={handleChange} required />
-        <InputField label="Fecha de Nacimiento" name="fecha_nacimiento" type="date" value={formData.fecha_nacimiento} onChange={handleChange} required />
-        <InputField label="Edad" name="edad" type="number" value={formData.edad} onChange={handleChange} required />
-        <SelectField label="Sexo" name="sexo" value={formData.sexo} onChange={handleChange} options={['Macho', 'Hembra']} required />
-        <InputField label="Raza" name="raza" value={formData.raza} onChange={handleChange} required />
-        <InputField label="Peso" name="peso" type="number" step="0.1" value={formData.peso} onChange={handleChange} required />
-        <TextAreaField label="Enfermedades" name="enfermedades" value={formData.enfermedades} onChange={handleChange} rows="3" required />
-        <CheckboxGroup
-          label="Características"
-          items={[
-            { name: 'chip', label: 'Chip', checked: formData.chip },
-            { name: 'esterilizado', label: 'Esterilizado', checked: formData.esterilizado },
-            { name: 'otitis', label: 'Otitis', checked: formData.otitis },
-            { name: 'pulgas', label: 'Pulgas', checked: formData.pulgas },
-            { name: 'heridas', label: 'Heridas', checked: formData.heridas },
-          ]}
+    <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
+      <h2 className="text-2xl font-bold text-center mb-6">Registrar Mascota</h2>
+      {message.text && (
+        <div
+          className={`p-4 mb-4 text-sm text-white rounded-lg ${
+            message.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+      <form onSubmit={onSubmit} className="space-y-4">
+        {/* Nombre */}
+        <input
+          type="text"
+          name="nombre"
+          value={mascota.nombre}
           onChange={handleChange}
+          placeholder="Nombre"
+          required
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
-        <InputField label="Personalidad" name="personalidad" value={formData.personalidad} onChange={handleChange} required />
-        <InputField label="Recordatorio" name="recordatorio" value={formData.recordatorio} onChange={handleChange} />
-        <InputField label="Nota" name="nota" type="number" value={formData.nota} onChange={handleChange} required />
-        <InputField label="Nodos" name="nodos" type="number" value={formData.nodos} onChange={handleChange} />
-        <ImageUploadField label="Imagen Antes" name="imagenAntes" onChange={handleChange} />
-        <ImageUploadField label="Imagen Después" name="imagenDespues" onChange={handleChange} />
-      </div>
-
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Notas Adicionales</label>
-        <div className="flex items-center space-x-2">
-          <input
-            type="text"
-            value={notaAdicional}
-            onChange={(e) => setNotaAdicional(e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
+        {/* Fecha de nacimiento */}
+        <input
+          type="date"
+          name="fecha_nacimiento"
+          value={mascota.fecha_nacimiento}
+          onChange={handleChange}
+          required
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        {/* Edad */}
+        <input
+          type="number"
+          name="edad"
+          value={mascota.edad}
+          onChange={handleChange}
+          placeholder="Edad"
+          required
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        {/* Sexo */}
+        <select
+          name="sexo"
+          value={mascota.sexo}
+          onChange={handleChange}
+          required
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="">Seleccione Sexo</option>
+          <option value="Macho">Macho</option>
+          <option value="Hembra">Hembra</option>
+        </select>
+        {/* Raza */}
+        <input
+          type="text"
+          name="raza"
+          value={mascota.raza}
+          onChange={handleChange}
+          placeholder="Raza"
+          required
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        {/* Peso */}
+        <input
+          type="number"
+          name="peso"
+          value={mascota.peso}
+          onChange={handleChange}
+          placeholder="Peso (kg)"
+          required
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        {/* Chip */}
+        <div className="flex items-center space-x-3">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              name="chip"
+              checked={mascota.chip}
+              onChange={handleChange}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <span>Tiene Chip</span>
+          </label>
+        </div>
+        {/* Esterilizado */}
+        <div className="flex items-center space-x-3">
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              name="esterilizado"
+              checked={mascota.esterilizado}
+              onChange={handleChange}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <span>Esterilizado</span>
+          </label>
+        </div>
+        {/* Enfermedades */}
+        <textarea
+          name="enfermedades"
+          value={mascota.enfermedades}
+          onChange={handleChange}
+          placeholder="Enfermedades"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        ></textarea>
+        {/* Personalidad */}
+        <textarea
+          name="personalidad"
+          value={mascota.personalidad}
+          onChange={handleChange}
+          placeholder="Personalidad"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        ></textarea>
+        {/* Recordatorio */}
+        <textarea
+          name="recordatorio"
+          value={mascota.recordatorio}
+          onChange={handleChange}
+          placeholder="Recordatorio"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        ></textarea>
+        {/* Nodos */}
+        <input
+          type="number"
+          name="nodos"
+          value={mascota.nodos}
+          onChange={handleChange}
+          placeholder="Nodos"
+          required
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        {/* Nota */}
+        <input
+          type="number"
+          name="nota"
+          value={mascota.nota}
+          onChange={handleChange}
+          placeholder="Nota (1-10)"
+          required
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        {/* Notas Adicionales */}
+        <textarea
+        name="notasAdicionales"
+        value={mascota.notasAdicionales}
+        onChange={handleChange}
+        placeholder="Notas adicionales"
+        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        {/* Imagen Antes */}
+        <input
+          type="file"
+          name="imagenAntes"
+          onChange={handleChange}
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        {/* Imagen Después */}
+        <input
+          type="file"
+          name="imagenDespues"
+          onChange={handleChange}
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        {/* Botones */}
+        <div className="flex justify-between">
+          <button
+            type="submit"
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            Registrar
+          </button>
           <button
             type="button"
-            onClick={handleAddNotaAdicional}
-            className="px-3 py-1 bg-indigo-600 text-white rounded-md"
+            onClick={() => navigate('/mascotas-menu')}
+            className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400"
           >
-            Añadir
+            Volver
           </button>
         </div>
-        <ul className="list-disc pl-5">
-          {formData.notasAdicionales.map((nota, index) => (
-            <li key={index} className="flex justify-between items-center">
-              {nota}
-              <button
-                type="button"
-                onClick={() => handleRemoveNotaAdicional(index)}
-                className="text-red-600 hover:underline"
-              >
-                Eliminar
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="flex justify-end space-x-3 mt-4">
-        <button
-          type="button"
-          onClick={() => onSuccess?.()}
-          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-4 py-2 border-transparent rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-        >
-          {loading ? 'Guardando...' : mascota?._id ? 'Actualizar' : 'Crear'}
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
-}
+};
+
+export default MascotaForm;

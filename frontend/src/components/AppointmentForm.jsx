@@ -19,11 +19,8 @@ const AppointmentForm = () => {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        // Cargar mascotas del usuario
         const fetchedPets = await getMascotas();
         setPets(fetchedPets);
-
-        // Cargar horarios disponibles
         const fetchedSlots = await getAvailableTimeSlots();
         setAvailableTimeSlots(fetchedSlots);
       } catch (error) {
@@ -119,19 +116,17 @@ const AppointmentForm = () => {
     const week = [];
     for (let i = 0; i < 7; i++) {
       const date = addDays(currentWeek, i);
-      const dayOfWeek = format(date, 'EEEE', { locale: es });
+      const dayOfWeek = format (date, 'EEEE', { locale: es });
       const hasSlots = availableTimeSlots.some(slot => slot.day.toLowerCase() === dayOfWeek.toLowerCase());
       week.push(
         <div
           key={i}
-          className={`col text-center cursor-pointer ${
-            hasSlots ? 'bg-light' : 'bg-secondary text-white'
-          } ${selectedDate && isSameDay(date, selectedDate) ? 'bg-primary text-white' : ''}`}
+          className={`text-center cursor-pointer p-4 rounded-lg ${hasSlots ? 'bg-gray-200' : 'bg-gray-600 text-white'} ${selectedDate && isSameDay(date, selectedDate) ? 'bg-blue-500 text-white' : ''}`}
           onClick={() => hasSlots && handleDateSelect(date)}
         >
           <div>{format(date, 'EEE', { locale: es })}</div>
           <div>{format(date, 'd')}</div>
-          {hasSlots ? <small className="text-success">Disponible</small> : <small className="text-danger">No disponible</small>}
+          {hasSlots ? <small className="text-green-500">Disponible</small> : <small className="text-red-500">No disponible</small>}
         </div>
       );
     }
@@ -147,104 +142,98 @@ const AppointmentForm = () => {
   };
 
   return (
-    <div className="container">
-      <div className="row justify-content-center">
-        <div className="col-md-8">
-          <div className="card shadow-sm">
-            <div className="card-body">
-              <h2 className="card-title text-center mb-4">Agendar Cita</h2>
-              <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                  <label htmlFor="service" className="form-label">Tipo de Servicio</label>
-                  <select
-                    id="service"
-                    className="form-select"
-                    value={service}
-                    onChange={(e) => setService(e.target.value)}
-                    required
-                  >
-                    <option value="">Seleccione un servicio</option>
-                    <option value="baño">Baño</option>
-                    <option value="corte">Recorte</option>
-                    <option value="baño_y_corte">Baño y Recorte</option>
-                    <option value="deslanado">Deslanado</option>
-                  </select>
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="pet" className="form-label">Mascota</label>
-                  <div className="input-group">
-                    <select
-                      id="pet"
-                      className="form-select"
-                      value={selectedPet}
-                      onChange={(e) => setSelectedPet(e.target.value)}
-                      required
-                    >
-                      <option value="">Seleccione una mascota</option>
-                      {pets.map((pet) => (
-                        <option key={pet._id} value={pet._id}>{pet.nombre}</option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => setShowPetForm(true)}
-                      className="btn btn-outline-secondary"
-                    >
-                      Agregar Mascota
-                    </button>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Fecha</label>
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <button type="button" onClick={goToPreviousWeek} className="btn btn-link">&lt; Semana anterior</button>
-                    <span>{format(currentWeek, 'MMMM yyyy', { locale: es })}</span>
-                    <button type="button" onClick={goToNextWeek} className="btn btn-link">Semana siguiente &gt;</button>
-                  </div>
-                  <div className="row g-1">
-                    {renderWeek()}
-                  </div>
-                </div>
-                {selectedDate && (
-                  <div className="mb-3">
-                    <label htmlFor="time" className="form-label">Hora</label>
-                    <select
-                      id="time"
-                      className="form-select"
-                      value={`${selectedTimeSlot?.id}|${time}`}
-                      onChange={handleTimeChange}
-                      required
-                    >
-                      <option value="">Seleccione una hora</option>
-                      {generateTimeOptions()}
-                    </select>
-                  </div>
-                )}
-                <button type="submit" className="btn btn-primary w-100">
-                  Agendar Cita
-                </button>
-              </form>
-
-              {showPetForm && (
-                <div className="modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-                  <div className="modal-dialog">
-                    <div className="modal-content">
-                      <div className="modal-header">
-                        <h5 className="modal-title">Agregar Nueva Mascota</h5>
-                        <button type="button" className="btn-close" onClick={() => setShowPetForm(false)}></button>
-                      </div>
-                      <div className="modal-body">
-                        <MascotaForm
-                          onSuccess={handleAddPet}
-                          onCancel={() => setShowPetForm(false)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+    <div className="container mx-auto p-4">
+      <div className="max-w-md mx-auto">
+        <div className="bg-white shadow-md rounded-lg p-6">
+          <h2 className="text-center text-2xl font-bold mb-4">Agendar Cita</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label htmlFor="service" className="block text-sm font-medium">Tipo de Servicio</label>
+              <select
+                id="service"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500"
+                value={service}
+                onChange={(e) => setService(e.target.value)}
+                required
+              >
+                <option value="">Seleccione un servicio</option>
+                <option value="baño">Baño</option>
+                <option value="corte">Recorte</option>
+                <option value="baño_y_corte">Baño y Recorte</option>
+                <option value="deslanado">Deslanado</option>
+              </select>
             </div>
-          </div>
+            <div className="mb-4">
+              <label htmlFor="pet" className="block text-sm font-medium">Mascota</label>
+              <div className="flex">
+                <select
+                  id="pet"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500"
+                  value={selectedPet}
+                  onChange={(e) => setSelectedPet(e.target.value)}
+                  required
+                >
+                  <option value="">Seleccione una mascota</option>
+                  {pets.map((pet) => (
+                    <option key={pet._id} value={pet._id}>{pet.nombre}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowPetForm(true)}
+                  className="ml-2 bg-blue-500 text-white rounded-md px-4 py-2"
+                >
+                  Agregar Mascota
+                </button>
+              </div>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Fecha</label>
+              <div className="flex justify-between items-center mb-2">
+                <button type="button" onClick={goToPreviousWeek} className="text-blue-500">&lt; Semana anterior</button>
+                <span>{format(currentWeek, 'MMMM yyyy', { locale: es })}</span>
+                <button type="button" onClick={goToNextWeek} className="text-blue-500">Semana siguiente &gt;</button>
+              </div>
+              <div className="grid grid-cols-7 gap-2">
+                {renderWeek()}
+              </div>
+            </div>
+            {selectedDate && (
+              <div className="mb-4">
+                <label htmlFor="time" className="block text-sm font-medium">Hora</label>
+                <select
+                  id="time"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring focus:ring-blue-500"
+                  value={`${selectedTimeSlot?.id}|${time}`}
+                  onChange={handleTimeChange}
+                  required
+                >
+                  <option value="">Seleccione una hora</option>
+                  {generateTimeOptions()}
+                </select>
+              </div>
+            )}
+            <button type="submit" className="w-full bg-blue-500 text-white rounded -md px-4 py-2">
+              Agendar Cita
+            </button>
+          </form>
+
+          {showPetForm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <div className="flex justify-between items-center">
+                  <h5 className="text-lg font-bold">Agregar Nueva Mascota</h5>
+                  <button type="button" className="text-gray-500" onClick={() => setShowPetForm(false)}>X</button>
+                </div>
+                <div className="mt-4">
+                  <MascotaForm
+                    onSuccess={handleAddPet}
+                    onCancel={() => setShowPetForm(false)}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
