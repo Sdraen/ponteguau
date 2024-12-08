@@ -1,5 +1,5 @@
 import * as appointmentService from '../services/appointment.service.js';
-import { appointmentSchema } from '../schemas/appointment.schema.js';
+import { appointmentSchema } from '../schema/appointment.schema.js';
 
 export const createAppointment = async (req, res, next) => {
   try {

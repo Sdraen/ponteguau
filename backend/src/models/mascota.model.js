@@ -20,8 +20,7 @@ const mascotaSchema = new mongoose.Schema({
   imagenAntes: { type: String, required: false }, // Imagen antes de la peluquería
   imagenDespues: { type: String, required: false }, // Imagen después de la peluquería
   propietario: { type: mongoose.Schema.Types.ObjectId, required: false , ref: 'User'},
-  historialCitas: [{ type: mongoose.Schema.Types.ObjectId,required:false, ref: 'Cita' }],
-  notasAdicionales: [{ type: String }]
+  notasAdicionales: { type: String, required: false }, // Ahora es un string
 });
 
 export default mongoose.model("Mascota", mascotaSchema);
